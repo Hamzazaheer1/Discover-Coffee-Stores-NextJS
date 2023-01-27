@@ -56,6 +56,7 @@ const CoffeeStore = (props) => {
 
   const { location, name, neighbourhood, imgUrl } = props.coffeeStore;
 
+  console.log(location);
   const handleUpvoteButton = () => {
     console.log("handle upload button");
   };
@@ -69,7 +70,7 @@ const CoffeeStore = (props) => {
       <div className={styles.container}>
         <div className={styles.col1}>
           <div className={styles.backToHomeLink}>
-            <Link href="/">Back to home</Link>
+            <Link href="/">← Back to home</Link>
           </div>
           <div className={styles.nameWrapper}>
             <h1 className={styles.name}>{name}</h1>
