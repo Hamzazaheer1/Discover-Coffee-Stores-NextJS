@@ -1,20 +1,20 @@
+import { useContext, useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useState, useEffect } from "react";
-import { useRouter } from "next/router";
+
+import cls from "classnames";
 
 import styles from "../../styles/coffee-store.module.css";
-import cls from "classnames";
 import { fetchCoffeeStores } from "@/lib/coffee-stores";
 
-import { StoreContext } from "../_app";
+import { StoreContext } from "../../store/store-context";
 
 import { isEmpty } from "../../utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
-  // console.log(params);
 
   const coffeeStores = await fetchCoffeeStores();
   const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
@@ -30,7 +30,6 @@ export async function getStaticProps(staticProps) {
 
 export async function getStaticPaths() {
   const coffeeStores = await fetchCoffeeStores();
-
   const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
@@ -58,7 +57,6 @@ const CoffeeStore = (initialProps) => {
     return <div>Loading...</div>;
   }
 
-  // const { location, name, neighbourhood, imgUrl } = props.coffeeStore;
   const id = router.query.id;
 
   const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
@@ -71,16 +69,17 @@ const CoffeeStore = (initialProps) => {
     if (isEmpty(initialProps.coffeeStore)) {
       if (coffeeStores.length > 0) {
         const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
-          return coffeeStore.id.toString() === id; //dynamic id
+          return coffeeStore.fsq_id.toString() === id; //dynamic id
         });
         setCoffeeStore(findCoffeeStoreById);
       }
     }
   }, [id]);
 
-  const { name, address, neighbourhood, imgUrl } = coffeeStore;
+  const { name, location, neighborhood, imgUrl } = coffeeStore;
 
-  console.log(location);
+  console.log({ coffeeStore });
+
   const handleUpvoteButton = () => {
     console.log("handle upload button");
   };
@@ -119,9 +118,9 @@ const CoffeeStore = (initialProps) => {
               height="24"
               alt="places icon"
             />
-            <p className={styles.text}>{location.address}</p>
+            <p className={styles.text}>{location?.address}</p>
           </div>
-          {location.neighborhood && (
+          {neighborhood && (
             <div className={styles.iconWrapper}>
               <Image
                 src="/static/icons/nearMe.svg"
@@ -129,7 +128,7 @@ const CoffeeStore = (initialProps) => {
                 height="24"
                 alt="near me icon"
               />
-              <p className={styles.text}>{location.neighborhood}</p>
+              <p className={styles.text}>{neighborhood}</p>
             </div>
           )}
           <div className={styles.iconWrapper}>
