@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const coffeeStoresSchema = new mongoose.Schema(
   {
-    id: { type: String, unique: [true, "Id must be unique"] },
+    id: { type: String, required: true, unique: true },
     name: { type: String },
     address: { type: String },
     neighbourhood: { type: String },

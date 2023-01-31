@@ -4,6 +4,8 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 
+import useSWR from "swr";
+
 import cls from "classnames";
 
 import styles from "../../styles/coffee-store.module.css";
@@ -11,19 +13,19 @@ import { fetchCoffeeStores } from "@/lib/coffee-stores";
 
 import { StoreContext } from "../../store/store-context";
 
-import { isEmpty } from "../../utils";
+import { fetcher, isEmpty } from "../../utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
 
   const coffeeStores = await fetchCoffeeStores();
-  const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+  const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
     return coffeeStore.fsq_id.toString() === params.id; //dynamic id
   });
 
   return {
     props: {
-      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
+      coffeeStore: coffeeStoreFromContext ? coffeeStoreFromContext : {},
     },
   };
 }
@@ -65,24 +67,95 @@ const CoffeeStore = (initialProps) => {
     state: { coffeeStores },
   } = useContext(StoreContext);
 
+  // node api called
+  const handleCreateCoffeeStore = async (coffeeStore) => {
+    try {
+      const { fsq_id, name, voting, imgUrl, neighbourhood, location } =
+        coffeeStore;
+      const response = await fetch("/api/createCoffeeStore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: `${fsq_id}`,
+          name,
+          voting,
+          imgUrl,
+          neighbourhood: neighbourhood || "",
+          address: location.address || "",
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      // console.log({ dbCoffeeStore });
+    } catch (err) {
+      console.log("error creating coffee store", err);
+    }
+  };
+
   useEffect(() => {
     if (isEmpty(initialProps.coffeeStore)) {
       if (coffeeStores.length > 0) {
-        const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+        const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
           return coffeeStore.fsq_id.toString() === id; //dynamic id
         });
-        setCoffeeStore(findCoffeeStoreById);
+
+        if (coffeeStoreFromContext) {
+          setCoffeeStore(coffeeStoreFromContext);
+          handleCreateCoffeeStore(coffeeStoreFromContext);
+        }
       }
+    } else {
+      //SSG
+      handleCreateCoffeeStore(initialProps.coffeeStore);
     }
-  }, [id]);
+  }, [id, initialProps, initialProps.coffeeStore]);
 
-  const { name, location, neighborhood, imgUrl } = coffeeStore;
+  const { name, location, neighborhood, imgUrl, address } = coffeeStore;
 
-  console.log({ coffeeStore });
+  // console.log({ coffeeStore });
 
-  const handleUpvoteButton = () => {
+  const [votingCount, setVotingCount] = useState(1);
+
+  console.log({ id });
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+  console.log({ data });
+  useEffect(() => {
+    if (data) {
+      console.log("data from swr ", data);
+      setCoffeeStore(data);
+      setVotingCount(data.voting);
+    }
+  }, [data]);
+
+  const handleUpvoteButton = async () => {
     console.log("handle upload button");
+    try {
+      const response = await fetch(`/api/favouriteCoffeeStoreById?id=${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      console.log({ dbCoffeeStore });
+      if (dbCoffeeStore) {
+        let count = votingCount + 1;
+        setVotingCount(count);
+      }
+
+      // console.log({ dbCoffeeStore });
+    } catch (err) {
+      console.log("error upvoting coffee store", err);
+    }
   };
+
+  if (error) {
+    return <div>Something went wrong retriving coffee store</div>;
+  }
 
   return (
     <div className={styles.layout}>
@@ -118,7 +191,7 @@ const CoffeeStore = (initialProps) => {
               height="24"
               alt="places icon"
             />
-            <p className={styles.text}>{location?.address}</p>
+            <p className={styles.text}>{location?.address || address}</p>
           </div>
           {neighborhood && (
             <div className={styles.iconWrapper}>
@@ -138,7 +211,7 @@ const CoffeeStore = (initialProps) => {
               height="24"
               alt="star icon"
             />
-            <p className={styles.text}>1</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
           <button className={styles.upvoteButton} onClick={handleUpvoteButton}>
             Up vote!
