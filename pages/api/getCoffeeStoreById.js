@@ -7,10 +7,9 @@ const getCoffeeStoreById = async (req, res) => {
 
     try {
       if (id) {
-        console.log({ id });
         await db.connect();
         const existingCoffeeStore = await coffeeStores.findOne({ id: id });
-        console.log({ existingCoffeeStore });
+
         if (existingCoffeeStore) {
           await db.disconnect();
           res.status(422).json(existingCoffeeStore);
@@ -24,7 +23,6 @@ const getCoffeeStoreById = async (req, res) => {
         res.status(400).json({ message: "Id is missing" });
       }
     } catch (err) {
-      console.log({ err });
       res.status(500).json({ message: "Error finding a store", err });
     }
   }

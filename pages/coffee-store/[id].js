@@ -41,13 +41,8 @@ export async function getStaticPaths() {
   });
 
   return {
-    // paths: [
-    //   { params: { id: "0" } },
-    //   { params: { id: "1" } },
-    //   { params: { id: "2" } },
-    // ],
     paths,
-    // fallback: false, // if you know your paths. Best for limited paths
+
     fallback: true, // have to show loading so that in the mean time it cached the new data
   };
 }
@@ -86,7 +81,6 @@ const CoffeeStore = (initialProps) => {
       });
 
       const dbCoffeeStore = await response.json();
-      // console.log({ dbCoffeeStore });
     } catch (err) {
       console.log("error creating coffee store", err);
     }
@@ -112,23 +106,18 @@ const CoffeeStore = (initialProps) => {
 
   const { name, location, neighborhood, imgUrl, address } = coffeeStore;
 
-  // console.log({ coffeeStore });
+  const [votingCount, setVotingCount] = useState(0);
 
-  const [votingCount, setVotingCount] = useState(1);
-
-  console.log({ id });
   const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
-  console.log({ data });
+
   useEffect(() => {
     if (data) {
-      console.log("data from swr ", data);
       setCoffeeStore(data);
       setVotingCount(data.voting);
     }
   }, [data]);
 
   const handleUpvoteButton = async () => {
-    console.log("handle upload button");
     try {
       const response = await fetch(`/api/favouriteCoffeeStoreById?id=${id}`, {
         method: "PATCH",
@@ -141,13 +130,11 @@ const CoffeeStore = (initialProps) => {
       });
 
       const dbCoffeeStore = await response.json();
-      console.log({ dbCoffeeStore });
+
       if (dbCoffeeStore) {
         let count = votingCount + 1;
         setVotingCount(count);
       }
-
-      // console.log({ dbCoffeeStore });
     } catch (err) {
       console.log("error upvoting coffee store", err);
     }

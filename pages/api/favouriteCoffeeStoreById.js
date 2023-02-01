@@ -8,9 +8,8 @@ const favouriteCoffeeStoreById = async (req, res) => {
     try {
       if (id) {
         await db.connect();
-        console.log({ id });
         const doc = await coffeeStores.findOneAndUpdate(
-          id,
+          { id: id },
           { $inc: { voting: 1 } },
           {
             new: true,
@@ -18,7 +17,6 @@ const favouriteCoffeeStoreById = async (req, res) => {
           }
         );
 
-        console.log({ doc });
         await db.disconnect();
 
         if (doc) {
@@ -30,7 +28,6 @@ const favouriteCoffeeStoreById = async (req, res) => {
         res.status(400).json({ message: "Id is missing" });
       }
     } catch (err) {
-      console.log({ err });
       res.status(500).json({ message: "Something went wrong", err });
     }
   }
