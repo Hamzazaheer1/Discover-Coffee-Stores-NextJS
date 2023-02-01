@@ -54,10 +54,6 @@ const CoffeeStore = (initialProps) => {
 
   const id = router.query.id;
 
-  if (router.isFallback) {
-    return <div>Loading...</div>;
-  }
-
   const {
     state: { coffeeStores },
   } = useContext(StoreContext);
@@ -142,6 +138,10 @@ const CoffeeStore = (initialProps) => {
 
   if (error) {
     return <div>Something went wrong retriving coffee store</div>;
+  }
+
+  if (router.isFallback) {
+    return <div>Loading...</div>;
   }
 
   return (
