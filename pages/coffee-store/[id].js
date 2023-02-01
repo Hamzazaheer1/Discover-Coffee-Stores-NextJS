@@ -52,11 +52,11 @@ const CoffeeStore = (initialProps) => {
 
   const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
 
+  const id = router.query.id;
+
   if (router.isFallback) {
     return <div>Loading...</div>;
   }
-
-  const id = router.query.id;
 
   const {
     state: { coffeeStores },
