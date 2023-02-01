@@ -1,8 +1,8 @@
-import { useContext, useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
 
 import useSWR from "swr";
 
@@ -42,17 +42,19 @@ export async function getStaticPaths() {
 
   return {
     paths,
-
-    fallback: true, // have to show loading so that in the mean time it cached the new data
+    fallback: true,
   };
 }
 
 const CoffeeStore = (initialProps) => {
+  const { useContext, useState, useEffect } = React;
   const router = useRouter();
 
-  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
-
   const id = router.query.id;
+
+  const [coffeeStore, setCoffeeStore] = useState(
+    initialProps.coffeeStore || {}
+  );
 
   const {
     state: { coffeeStores },
@@ -98,10 +100,9 @@ const CoffeeStore = (initialProps) => {
       //SSG
       handleCreateCoffeeStore(initialProps.coffeeStore);
     }
-  }, [id, initialProps, initialProps.coffeeStore]);
+  }, [id, initialProps.coffeeStore, coffeeStores]);
 
   const { name, location, neighborhood, imgUrl, address } = coffeeStore;
-
   const [votingCount, setVotingCount] = useState(0);
 
   const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
@@ -112,6 +113,10 @@ const CoffeeStore = (initialProps) => {
       setVotingCount(data.voting);
     }
   }, [data]);
+
+  if (router.isFallback) {
+    return <div>Loading...</div>;
+  }
 
   const handleUpvoteButton = async () => {
     try {
@@ -138,10 +143,6 @@ const CoffeeStore = (initialProps) => {
 
   if (error) {
     return <div>Something went wrong retriving coffee store</div>;
-  }
-
-  if (router.isFallback) {
-    return <div>Loading...</div>;
   }
 
   return (
